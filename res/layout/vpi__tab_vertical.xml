@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<view xmlns:android="http://schemas.android.com/apk/res/android"
+	style="?attr/vpiVerticalTabPageIndicatorStyle"
+	class="com.viewpagerindicator.VerticalTabPageIndicator$TabView">
+
+	<com.viewpagerindicator.VerticalTextView
+		android:id="@android:id/text1"
+		style="?attr/vpiVerticalTabTextStyle"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:ellipsize="none"
+		android:gravity="bottom"/>
+
+</view>
