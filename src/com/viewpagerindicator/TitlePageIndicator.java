@@ -18,6 +18,7 @@
 package com.viewpagerindicator;
 
 import java.util.ArrayList;
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
@@ -31,7 +32,6 @@ import android.os.Parcelable;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewConfigurationCompat;
-import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -59,41 +59,10 @@ public class TitlePageIndicator extends View implements PageIndicator {
 	 */
 	private static final float BOLD_FADE_PERCENTAGE = 0.05f;
 
-	/**
-	 * Interface for a callback when the center item has been clicked.
-	 */
-	public static interface OnCenterItemClickListener {
+	private ExtendedViewPager mViewPager;
 
-		/**
-		 * Callback when the center item has been clicked.
-		 * 
-		 * @param position
-		 *            Position of the current center item.
-		 */
-		public void onCenterItemClick(int position);
-	}
+	private ExtendedViewPager.OnPageChangeListener mListener;
 
-	public enum IndicatorStyle {
-		None(0), Triangle(1), Underline(2);
-
-		public final int value;
-
-		private IndicatorStyle(int value) {
-			this.value = value;
-		}
-
-		public static IndicatorStyle fromValue(int value) {
-			for (IndicatorStyle style : IndicatorStyle.values()) {
-				if (style.value == value) {
-					return style;
-				}
-			}
-			return null;
-		}
-	}
-
-	private ViewPager mViewPager;
-	private ViewPager.OnPageChangeListener mListener;
 	private TitleProvider mTitleProvider;
 	private int mCurrentPage;
 	private int mCurrentOffset;
@@ -114,15 +83,16 @@ public class TitlePageIndicator extends View implements PageIndicator {
 	/** Left and right side padding for not active view titles. */
 	private float mClipPadding;
 	private float mFooterLineHeight;
-
 	private static final int INVALID_POINTER = -1;
-
 	private int mTouchSlop;
+
 	private float mLastMotionX = -1;
+
 	private int mActivePointerId = INVALID_POINTER;
 	private boolean mIsDragging;
-
 	private OnCenterItemClickListener mCenterItemClickListener;
+
+	private boolean mPagingEnabled = true;
 
 	public TitlePageIndicator(Context context) {
 		this(context, null);
@@ -138,59 +108,44 @@ public class TitlePageIndicator extends View implements PageIndicator {
 		// Load defaults from resources
 		final Resources res = getResources();
 		final int defaultFooterColor = res.getColor(R.color.default_title_indicator_footer_color);
-		final float defaultFooterLineHeight = res
-				.getDimension(R.dimen.default_title_indicator_footer_line_height);
+		final float defaultFooterLineHeight = res.getDimension(R.dimen.default_title_indicator_footer_line_height);
 		final int defaultFooterIndicatorStyle = res
 				.getInteger(R.integer.default_title_indicator_footer_indicator_style);
 		final float defaultFooterIndicatorHeight = res
 				.getDimension(R.dimen.default_title_indicator_footer_indicator_height);
 		final float defaultFooterIndicatorUnderlinePadding = res
 				.getDimension(R.dimen.default_title_indicator_footer_indicator_underline_padding);
-		final float defaultFooterPadding = res
-				.getDimension(R.dimen.default_title_indicator_footer_padding);
-		final int defaultSelectedColor = res
-				.getColor(R.color.default_title_indicator_selected_color);
-		final boolean defaultSelectedBold = res
-				.getBoolean(R.bool.default_title_indicator_selected_bold);
+		final float defaultFooterPadding = res.getDimension(R.dimen.default_title_indicator_footer_padding);
+		final int defaultSelectedColor = res.getColor(R.color.default_title_indicator_selected_color);
+		final boolean defaultSelectedBold = res.getBoolean(R.bool.default_title_indicator_selected_bold);
 		final int defaultTextColor = res.getColor(R.color.default_title_indicator_text_color);
 		final float defaultTextSize = res.getDimension(R.dimen.default_title_indicator_text_size);
-		final float defaultTitlePadding = res
-				.getDimension(R.dimen.default_title_indicator_title_padding);
-		final float defaultClipPadding = res
-				.getDimension(R.dimen.default_title_indicator_clip_padding);
-		final float defaultTopPadding = res
-				.getDimension(R.dimen.default_title_indicator_top_padding);
+		final float defaultTitlePadding = res.getDimension(R.dimen.default_title_indicator_title_padding);
+		final float defaultClipPadding = res.getDimension(R.dimen.default_title_indicator_clip_padding);
+		final float defaultTopPadding = res.getDimension(R.dimen.default_title_indicator_top_padding);
 
 		// Retrieve styles attributes
-		TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TitlePageIndicator,
-				defStyle, R.style.Widget_TitlePageIndicator);
+		TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TitlePageIndicator, defStyle,
+				R.style.Widget_TitlePageIndicator);
 
 		// Retrieve the colors to be used for this view and apply them.
-		mFooterLineHeight = a.getDimension(R.styleable.TitlePageIndicator_footerLineHeight,
-				defaultFooterLineHeight);
+		mFooterLineHeight = a.getDimension(R.styleable.TitlePageIndicator_footerLineHeight, defaultFooterLineHeight);
 		mFooterIndicatorStyle = IndicatorStyle.fromValue(a.getInteger(
 				R.styleable.TitlePageIndicator_footerIndicatorStyle, defaultFooterIndicatorStyle));
-		mFooterIndicatorHeight = a.getDimension(
-				R.styleable.TitlePageIndicator_footerIndicatorHeight, defaultFooterIndicatorHeight);
+		mFooterIndicatorHeight = a.getDimension(R.styleable.TitlePageIndicator_footerIndicatorHeight,
+				defaultFooterIndicatorHeight);
 		mFooterIndicatorUnderlinePadding = a.getDimension(
-				R.styleable.TitlePageIndicator_footerIndicatorUnderlinePadding,
-				defaultFooterIndicatorUnderlinePadding);
-		mFooterPadding = a.getDimension(R.styleable.TitlePageIndicator_footerPadding,
-				defaultFooterPadding);
+				R.styleable.TitlePageIndicator_footerIndicatorUnderlinePadding, defaultFooterIndicatorUnderlinePadding);
+		mFooterPadding = a.getDimension(R.styleable.TitlePageIndicator_footerPadding, defaultFooterPadding);
 		mTopPadding = a.getDimension(R.styleable.TitlePageIndicator_topPadding, defaultTopPadding);
-		mTitlePadding = a.getDimension(R.styleable.TitlePageIndicator_titlePadding,
-				defaultTitlePadding);
-		mClipPadding = a.getDimension(R.styleable.TitlePageIndicator_clipPadding,
-				defaultClipPadding);
-		mColorSelected = a.getColor(R.styleable.TitlePageIndicator_selectedColor,
-				defaultSelectedColor);
+		mTitlePadding = a.getDimension(R.styleable.TitlePageIndicator_titlePadding, defaultTitlePadding);
+		mClipPadding = a.getDimension(R.styleable.TitlePageIndicator_clipPadding, defaultClipPadding);
+		mColorSelected = a.getColor(R.styleable.TitlePageIndicator_selectedColor, defaultSelectedColor);
 		mColorText = a.getColor(R.styleable.TitlePageIndicator_textColor, defaultTextColor);
 		mBoldText = a.getBoolean(R.styleable.TitlePageIndicator_selectedBold, defaultSelectedBold);
 
-		final float textSize = a.getDimension(R.styleable.TitlePageIndicator_textSize,
-				defaultTextSize);
-		final int footerColor = a.getColor(R.styleable.TitlePageIndicator_footerColor,
-				defaultFooterColor);
+		final float textSize = a.getDimension(R.styleable.TitlePageIndicator_textSize, defaultTextSize);
+		final int footerColor = a.getColor(R.styleable.TitlePageIndicator_footerColor, defaultFooterColor);
 		mPaintText.setTextSize(textSize);
 		mPaintText.setAntiAlias(true);
 		mPaintFooterLine.setStyle(Paint.Style.FILL_AND_STROKE);
@@ -205,8 +160,216 @@ public class TitlePageIndicator extends View implements PageIndicator {
 		mTouchSlop = ViewConfigurationCompat.getScaledPagingTouchSlop(configuration);
 	}
 
+	public float getClipPadding() {
+		return mClipPadding;
+	}
+
 	public int getFooterColor() {
 		return mPaintFooterLine.getColor();
+	}
+
+	public float getFooterIndicatorHeight() {
+		return mFooterIndicatorHeight;
+	}
+
+	public float getFooterIndicatorPadding() {
+		return mFooterPadding;
+	}
+
+	public IndicatorStyle getFooterIndicatorStyle() {
+		return mFooterIndicatorStyle;
+	}
+
+	public float getFooterLineHeight() {
+		return mFooterLineHeight;
+	}
+
+	public int getSelectedColor() {
+		return mColorSelected;
+	}
+
+	public int getTextColor() {
+		return mColorText;
+	}
+
+	public float getTextSize() {
+		return mPaintText.getTextSize();
+	}
+
+	public float getTitlePadding() {
+		return mTitlePadding;
+	}
+
+	public float getTopPadding() {
+		return mTopPadding;
+	}
+
+	public Typeface getTypeface() {
+		return mPaintText.getTypeface();
+	}
+
+	public boolean isSelectedBold() {
+		return mBoldText;
+	}
+
+	@Override
+	public void notifyDataSetChanged() {
+		invalidate();
+	}
+
+	@Override
+	public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+		mCurrentPage = position;
+		mCurrentOffset = positionOffsetPixels;
+		invalidate();
+
+		if (mListener != null) {
+			mListener.onPageScrolled(position, positionOffset, positionOffsetPixels);
+		}
+	}
+
+	@Override
+	public void onPageScrollStateChanged(int state) {
+		mScrollState = state;
+
+		if (mListener != null) {
+			mListener.onPageScrollStateChanged(state);
+		}
+	}
+
+	@Override
+	public void onPageSelected(int position) {
+		if (mScrollState == ExtendedViewPager.SCROLL_STATE_IDLE) {
+			mCurrentPage = position;
+			invalidate();
+		}
+
+		if (mListener != null) {
+			mListener.onPageSelected(position);
+		}
+	}
+
+	@Override
+	public void onRestoreInstanceState(Parcelable state) {
+		SavedState savedState = (SavedState) state;
+		super.onRestoreInstanceState(savedState.getSuperState());
+		mCurrentPage = savedState.currentPage;
+		requestLayout();
+	}
+
+	@Override
+	public Parcelable onSaveInstanceState() {
+		Parcelable superState = super.onSaveInstanceState();
+		SavedState savedState = new SavedState(superState);
+		savedState.currentPage = mCurrentPage;
+		return savedState;
+	}
+
+	@Override
+	public boolean onTouchEvent(android.view.MotionEvent ev) {
+		if (mViewPager == null || mViewPager.getAdapter().getCount() == 0 || !mPagingEnabled) return false;
+
+		final int action = ev.getAction();
+
+		switch (action & MotionEventCompat.ACTION_MASK) {
+			case MotionEvent.ACTION_DOWN:
+				mActivePointerId = MotionEventCompat.getPointerId(ev, 0);
+				mLastMotionX = ev.getX();
+				break;
+
+			case MotionEvent.ACTION_MOVE: {
+				final int activePointerIndex = MotionEventCompat.findPointerIndex(ev, mActivePointerId);
+				final float x = MotionEventCompat.getX(ev, activePointerIndex);
+				final float deltaX = x - mLastMotionX;
+
+				if (!mIsDragging) {
+					if (Math.abs(deltaX) > mTouchSlop) {
+						mIsDragging = true;
+					}
+				}
+
+				if (mIsDragging) {
+					if (!mViewPager.isFakeDragging()) {
+						mViewPager.beginFakeDrag();
+					}
+
+					mLastMotionX = x;
+
+					mViewPager.fakeDragBy(deltaX);
+				}
+
+				break;
+			}
+
+			case MotionEvent.ACTION_CANCEL:
+			case MotionEvent.ACTION_UP:
+				if (!mIsDragging) {
+					final int count = mViewPager.getAdapter().getCount();
+					final int width = getWidth();
+					final float halfWidth = width / 2f;
+					final float sixthWidth = width / 6f;
+					final float leftThird = halfWidth - sixthWidth;
+					final float rightThird = halfWidth + sixthWidth;
+					final float eventX = ev.getX();
+
+					if (eventX < leftThird) {
+						if (mCurrentPage > 0) {
+							mViewPager.setCurrentItem(mCurrentPage - 1);
+							return true;
+						}
+					} else if (eventX > rightThird) {
+						if (mCurrentPage < count - 1) {
+							mViewPager.setCurrentItem(mCurrentPage + 1);
+							return true;
+						}
+					} else {
+						// Middle third
+						if (mCenterItemClickListener != null) {
+							mCenterItemClickListener.onCenterItemClick(mCurrentPage);
+						}
+					}
+				}
+
+				mIsDragging = false;
+				mActivePointerId = INVALID_POINTER;
+				if (mViewPager.isFakeDragging()) {
+					mViewPager.endFakeDrag();
+				}
+				break;
+
+			case MotionEventCompat.ACTION_POINTER_DOWN: {
+				final int index = MotionEventCompat.getActionIndex(ev);
+				final float x = MotionEventCompat.getX(ev, index);
+				mLastMotionX = x;
+				mActivePointerId = MotionEventCompat.getPointerId(ev, index);
+				break;
+			}
+
+			case MotionEventCompat.ACTION_POINTER_UP:
+				final int pointerIndex = MotionEventCompat.getActionIndex(ev);
+				final int pointerId = MotionEventCompat.getPointerId(ev, pointerIndex);
+				if (pointerId == mActivePointerId) {
+					final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
+					mActivePointerId = MotionEventCompat.getPointerId(ev, newPointerIndex);
+				}
+				mLastMotionX = MotionEventCompat.getX(ev, MotionEventCompat.findPointerIndex(ev, mActivePointerId));
+				break;
+		}
+
+		return true;
+	}
+
+	public void setClipPadding(float clipPadding) {
+		mClipPadding = clipPadding;
+		invalidate();
+	}
+
+	@Override
+	public void setCurrentItem(int item) {
+		if (mViewPager == null) throw new IllegalStateException("ViewPager has not been bound.");
+		mViewPager.setCurrentItem(item);
+		mCurrentPage = item;
+		invalidate();
 	}
 
 	public void setFooterColor(int footerColor) {
@@ -215,8 +378,19 @@ public class TitlePageIndicator extends View implements PageIndicator {
 		invalidate();
 	}
 
-	public float getFooterLineHeight() {
-		return mFooterLineHeight;
+	public void setFooterIndicatorHeight(float footerTriangleHeight) {
+		mFooterIndicatorHeight = footerTriangleHeight;
+		invalidate();
+	}
+
+	public void setFooterIndicatorPadding(float footerIndicatorPadding) {
+		mFooterPadding = footerIndicatorPadding;
+		invalidate();
+	}
+
+	public void setFooterIndicatorStyle(IndicatorStyle indicatorStyle) {
+		mFooterIndicatorStyle = indicatorStyle;
+		invalidate();
 	}
 
 	public void setFooterLineHeight(float footerLineHeight) {
@@ -225,44 +399,24 @@ public class TitlePageIndicator extends View implements PageIndicator {
 		invalidate();
 	}
 
-	public float getFooterIndicatorHeight() {
-		return mFooterIndicatorHeight;
+	/**
+	 * Set a callback listener for the center item click.
+	 * 
+	 * @param listener Callback instance.
+	 */
+	public void setOnCenterItemClickListener(OnCenterItemClickListener listener) {
+		mCenterItemClickListener = listener;
 	}
 
-	public void setFooterIndicatorHeight(float footerTriangleHeight) {
-		mFooterIndicatorHeight = footerTriangleHeight;
-		invalidate();
-	}
+	@Override
+	public void setOnPageChangeListener(ExtendedViewPager.OnPageChangeListener listener) {
+		mListener = listener;
+	};
 
-	public float getFooterIndicatorPadding() {
-		return mFooterPadding;
-	}
-
-	public void setFooterIndicatorPadding(float footerIndicatorPadding) {
-		mFooterPadding = footerIndicatorPadding;
-		invalidate();
-	}
-
-	public IndicatorStyle getFooterIndicatorStyle() {
-		return mFooterIndicatorStyle;
-	}
-
-	public void setFooterIndicatorStyle(IndicatorStyle indicatorStyle) {
-		mFooterIndicatorStyle = indicatorStyle;
-		invalidate();
-	}
-
-	public int getSelectedColor() {
-		return mColorSelected;
-	}
-
-	public void setSelectedColor(int selectedColor) {
-		mColorSelected = selectedColor;
-		invalidate();
-	}
-
-	public boolean isSelectedBold() {
-		return mBoldText;
+	@Override
+	public void setPagingEnabled(boolean enabled) {
+		mViewPager.setPagingEnabled(enabled);
+		mPagingEnabled = enabled;
 	}
 
 	public void setSelectedBold(boolean selectedBold) {
@@ -270,8 +424,9 @@ public class TitlePageIndicator extends View implements PageIndicator {
 		invalidate();
 	}
 
-	public int getTextColor() {
-		return mColorText;
+	public void setSelectedColor(int selectedColor) {
+		mColorSelected = selectedColor;
+		invalidate();
 	}
 
 	public void setTextColor(int textColor) {
@@ -280,17 +435,9 @@ public class TitlePageIndicator extends View implements PageIndicator {
 		invalidate();
 	}
 
-	public float getTextSize() {
-		return mPaintText.getTextSize();
-	}
-
 	public void setTextSize(float textSize) {
 		mPaintText.setTextSize(textSize);
 		invalidate();
-	}
-
-	public float getTitlePadding() {
-		return this.mTitlePadding;
 	}
 
 	public void setTitlePadding(float titlePadding) {
@@ -298,21 +445,8 @@ public class TitlePageIndicator extends View implements PageIndicator {
 		invalidate();
 	}
 
-	public float getTopPadding() {
-		return this.mTopPadding;
-	}
-
 	public void setTopPadding(float topPadding) {
 		mTopPadding = topPadding;
-		invalidate();
-	}
-
-	public float getClipPadding() {
-		return this.mClipPadding;
-	}
-
-	public void setClipPadding(float clipPadding) {
-		mClipPadding = clipPadding;
 		invalidate();
 	}
 
@@ -321,8 +455,23 @@ public class TitlePageIndicator extends View implements PageIndicator {
 		invalidate();
 	}
 
-	public Typeface getTypeface() {
-		return mPaintText.getTypeface();
+	@Override
+	public void setViewPager(ExtendedViewPager pager) {
+		final PagerAdapter adapter = pager.getAdapter();
+		if (adapter == null) throw new IllegalStateException("ViewPager does not have adapter instance.");
+		if (!(adapter instanceof TitleProvider))
+			throw new IllegalStateException(
+					"ViewPager adapter must implement TitleProvider to be used with TitlePageIndicator.");
+		mViewPager = pager;
+		mViewPager.setOnPageChangeListener(this);
+		mTitleProvider = (TitleProvider) adapter;
+		invalidate();
+	}
+
+	@Override
+	public void setViewPager(ExtendedViewPager pager, int initialPosition) {
+		setViewPager(pager);
+		setCurrentItem(initialPosition);
 	}
 
 	/*
@@ -334,13 +483,9 @@ public class TitlePageIndicator extends View implements PageIndicator {
 	protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
 
-		if (mViewPager == null) {
-			return;
-		}
+		if (mViewPager == null) return;
 		final int count = mViewPager.getAdapter().getCount();
-		if (count == 0) {
-			return;
-		}
+		if (count == 0) return;
 
 		// Calculate views bounds
 		ArrayList<RectF> bounds = calculateAllBounds(mPaintText);
@@ -367,10 +512,9 @@ public class TitlePageIndicator extends View implements PageIndicator {
 			page += 1;
 			offsetPercent = 1.0f * (width - mCurrentOffset) / width;
 		}
-		final boolean currentSelected = (offsetPercent <= SELECTION_FADE_PERCENTAGE);
-		final boolean currentBold = (offsetPercent <= BOLD_FADE_PERCENTAGE);
-		final float selectedPercent = (SELECTION_FADE_PERCENTAGE - offsetPercent)
-				/ SELECTION_FADE_PERCENTAGE;
+		final boolean currentSelected = offsetPercent <= SELECTION_FADE_PERCENTAGE;
+		final boolean currentBold = offsetPercent <= BOLD_FADE_PERCENTAGE;
+		final float selectedPercent = (SELECTION_FADE_PERCENTAGE - offsetPercent) / SELECTION_FADE_PERCENTAGE;
 
 		// Verify if the current view must be clipped to the screen
 		RectF curPageBound = bounds.get(mCurrentPage);
@@ -428,23 +572,20 @@ public class TitlePageIndicator extends View implements PageIndicator {
 			// Get the title
 			RectF bound = bounds.get(i);
 			// Only if one side is visible
-			if ((bound.left > left && bound.left < right)
-					|| (bound.right > left && bound.right < right)) {
-				final boolean currentPage = (i == page);
+			if (bound.left > left && bound.left < right || bound.right > left && bound.right < right) {
+				final boolean currentPage = i == page;
 				// Only set bold if we are within bounds
 				mPaintText.setFakeBoldText(currentPage && currentBold && mBoldText);
 
 				// Draw text as unselected
 				mPaintText.setColor(mColorText);
-				canvas.drawText(mTitleProvider.getTitle(i), bound.left, bound.bottom + mTopPadding,
-						mPaintText);
+				canvas.drawText(mTitleProvider.getTitle(i), bound.left, bound.bottom + mTopPadding, mPaintText);
 
 				// If we are within the selected bounds draw the selected text
 				if (currentPage && currentSelected) {
 					mPaintText.setColor(mColorSelected);
 					mPaintText.setAlpha((int) ((mColorSelected >>> 24) * selectedPercent));
-					canvas.drawText(mTitleProvider.getTitle(i), bound.left, bound.bottom
-							+ mTopPadding, mPaintText);
+					canvas.drawText(mTitleProvider.getTitle(i), bound.left, bound.bottom + mTopPadding, mPaintText);
 				}
 			}
 		}
@@ -473,14 +614,12 @@ public class TitlePageIndicator extends View implements PageIndicator {
 
 				RectF underlineBounds = bounds.get(page);
 				mPath = new Path();
-				mPath.moveTo(underlineBounds.left - mFooterIndicatorUnderlinePadding, height
-						- mFooterLineHeight);
-				mPath.lineTo(underlineBounds.right + mFooterIndicatorUnderlinePadding, height
-						- mFooterLineHeight);
-				mPath.lineTo(underlineBounds.right + mFooterIndicatorUnderlinePadding, height
-						- mFooterLineHeight - mFooterIndicatorHeight);
-				mPath.lineTo(underlineBounds.left - mFooterIndicatorUnderlinePadding, height
-						- mFooterLineHeight - mFooterIndicatorHeight);
+				mPath.moveTo(underlineBounds.left - mFooterIndicatorUnderlinePadding, height - mFooterLineHeight);
+				mPath.lineTo(underlineBounds.right + mFooterIndicatorUnderlinePadding, height - mFooterLineHeight);
+				mPath.lineTo(underlineBounds.right + mFooterIndicatorUnderlinePadding, height - mFooterLineHeight
+						- mFooterIndicatorHeight);
+				mPath.lineTo(underlineBounds.left - mFooterIndicatorUnderlinePadding, height - mFooterLineHeight
+						- mFooterIndicatorHeight);
 				mPath.close();
 
 				mPaintFooterIndicator.setAlpha((int) (0xFF * selectedPercent));
@@ -488,254 +627,6 @@ public class TitlePageIndicator extends View implements PageIndicator {
 				mPaintFooterIndicator.setAlpha(0xFF);
 				break;
 		}
-	}
-
-	@Override
-	public boolean onTouchEvent(android.view.MotionEvent ev) {
-		if ((mViewPager == null) || (mViewPager.getAdapter().getCount() == 0)) {
-			return false;
-		}
-
-		final int action = ev.getAction();
-
-		switch (action & MotionEventCompat.ACTION_MASK) {
-			case MotionEvent.ACTION_DOWN:
-				mActivePointerId = MotionEventCompat.getPointerId(ev, 0);
-				mLastMotionX = ev.getX();
-				break;
-
-			case MotionEvent.ACTION_MOVE: {
-				final int activePointerIndex = MotionEventCompat.findPointerIndex(ev,
-						mActivePointerId);
-				final float x = MotionEventCompat.getX(ev, activePointerIndex);
-				final float deltaX = x - mLastMotionX;
-
-				if (!mIsDragging) {
-					if (Math.abs(deltaX) > mTouchSlop) {
-						mIsDragging = true;
-					}
-				}
-
-				if (mIsDragging) {
-					if (!mViewPager.isFakeDragging()) {
-						mViewPager.beginFakeDrag();
-					}
-
-					mLastMotionX = x;
-
-					mViewPager.fakeDragBy(deltaX);
-				}
-
-				break;
-			}
-
-			case MotionEvent.ACTION_CANCEL:
-			case MotionEvent.ACTION_UP:
-				if (!mIsDragging) {
-					final int count = mViewPager.getAdapter().getCount();
-					final int width = getWidth();
-					final float halfWidth = width / 2f;
-					final float sixthWidth = width / 6f;
-					final float leftThird = halfWidth - sixthWidth;
-					final float rightThird = halfWidth + sixthWidth;
-					final float eventX = ev.getX();
-
-					if (eventX < leftThird) {
-						if (mCurrentPage > 0) {
-							mViewPager.setCurrentItem(mCurrentPage - 1);
-							return true;
-						}
-					} else if (eventX > rightThird) {
-						if (mCurrentPage < count - 1) {
-							mViewPager.setCurrentItem(mCurrentPage + 1);
-							return true;
-						}
-					} else {
-						// Middle third
-						if (mCenterItemClickListener != null) {
-							mCenterItemClickListener.onCenterItemClick(mCurrentPage);
-						}
-					}
-				}
-
-				mIsDragging = false;
-				mActivePointerId = INVALID_POINTER;
-				if (mViewPager.isFakeDragging()) mViewPager.endFakeDrag();
-				break;
-
-			case MotionEventCompat.ACTION_POINTER_DOWN: {
-				final int index = MotionEventCompat.getActionIndex(ev);
-				final float x = MotionEventCompat.getX(ev, index);
-				mLastMotionX = x;
-				mActivePointerId = MotionEventCompat.getPointerId(ev, index);
-				break;
-			}
-
-			case MotionEventCompat.ACTION_POINTER_UP:
-				final int pointerIndex = MotionEventCompat.getActionIndex(ev);
-				final int pointerId = MotionEventCompat.getPointerId(ev, pointerIndex);
-				if (pointerId == mActivePointerId) {
-					final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
-					mActivePointerId = MotionEventCompat.getPointerId(ev, newPointerIndex);
-				}
-				mLastMotionX = MotionEventCompat.getX(ev,
-						MotionEventCompat.findPointerIndex(ev, mActivePointerId));
-				break;
-		}
-
-		return true;
-	};
-
-	/**
-	 * Set bounds for the right textView including clip padding.
-	 * 
-	 * @param curViewBound
-	 *            current bounds.
-	 * @param curViewWidth
-	 *            width of the view.
-	 */
-	private void clipViewOnTheRight(RectF curViewBound, float curViewWidth, int right) {
-		curViewBound.right = right - mClipPadding;
-		curViewBound.left = curViewBound.right - curViewWidth;
-	}
-
-	/**
-	 * Set bounds for the left textView including clip padding.
-	 * 
-	 * @param curViewBound
-	 *            current bounds.
-	 * @param curViewWidth
-	 *            width of the view.
-	 */
-	private void clipViewOnTheLeft(RectF curViewBound, float curViewWidth, int left) {
-		curViewBound.left = left + mClipPadding;
-		curViewBound.right = mClipPadding + curViewWidth;
-	}
-
-	/**
-	 * Calculate views bounds and scroll them according to the current index
-	 * 
-	 * @param paint
-	 * @param currentIndex
-	 * @return
-	 */
-	private ArrayList<RectF> calculateAllBounds(Paint paint) {
-		ArrayList<RectF> list = new ArrayList<RectF>();
-		// For each views (If no values then add a fake one)
-		final int count = mViewPager.getAdapter().getCount();
-		final int width = getWidth();
-		final int halfWidth = width / 2;
-		for (int i = 0; i < count; i++) {
-			RectF bounds = calcBounds(i, paint);
-			float w = (bounds.right - bounds.left);
-			float h = (bounds.bottom - bounds.top);
-			bounds.left = (halfWidth) - (w / 2) - mCurrentOffset + ((i - mCurrentPage) * width);
-			bounds.right = bounds.left + w;
-			bounds.top = 0;
-			bounds.bottom = h;
-			list.add(bounds);
-		}
-
-		return list;
-	}
-
-	/**
-	 * Calculate the bounds for a view's title
-	 * 
-	 * @param index
-	 * @param paint
-	 * @return
-	 */
-	private RectF calcBounds(int index, Paint paint) {
-		// Calculate the text bounds
-		RectF bounds = new RectF();
-		bounds.right = paint.measureText(mTitleProvider.getTitle(index));
-		bounds.bottom = paint.descent() - paint.ascent();
-		return bounds;
-	}
-
-	@Override
-	public void setViewPager(ViewPager view) {
-		final PagerAdapter adapter = view.getAdapter();
-		if (adapter == null) {
-			throw new IllegalStateException("ViewPager does not have adapter instance.");
-		}
-		if (!(adapter instanceof TitleProvider)) {
-			throw new IllegalStateException(
-					"ViewPager adapter must implement TitleProvider to be used with TitlePageIndicator.");
-		}
-		mViewPager = view;
-		mViewPager.setOnPageChangeListener(this);
-		mTitleProvider = (TitleProvider) adapter;
-		invalidate();
-	}
-
-	@Override
-	public void setViewPager(ViewPager view, int initialPosition) {
-		setViewPager(view);
-		setCurrentItem(initialPosition);
-	}
-
-	@Override
-	public void notifyDataSetChanged() {
-		invalidate();
-	}
-
-	/**
-	 * Set a callback listener for the center item click.
-	 * 
-	 * @param listener
-	 *            Callback instance.
-	 */
-	public void setOnCenterItemClickListener(OnCenterItemClickListener listener) {
-		mCenterItemClickListener = listener;
-	}
-
-	@Override
-	public void setCurrentItem(int item) {
-		if (mViewPager == null) {
-			throw new IllegalStateException("ViewPager has not been bound.");
-		}
-		mViewPager.setCurrentItem(item);
-		mCurrentPage = item;
-		invalidate();
-	}
-
-	@Override
-	public void onPageScrollStateChanged(int state) {
-		mScrollState = state;
-
-		if (mListener != null) {
-			mListener.onPageScrollStateChanged(state);
-		}
-	}
-
-	@Override
-	public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-		mCurrentPage = position;
-		mCurrentOffset = positionOffsetPixels;
-		invalidate();
-
-		if (mListener != null) {
-			mListener.onPageScrolled(position, positionOffset, positionOffsetPixels);
-		}
-	}
-
-	@Override
-	public void onPageSelected(int position) {
-		if (mScrollState == ViewPager.SCROLL_STATE_IDLE) {
-			mCurrentPage = position;
-			invalidate();
-		}
-
-		if (mListener != null) {
-			mListener.onPageSelected(position);
-		}
-	}
-
-	@Override
-	public void setOnPageChangeListener(ViewPager.OnPageChangeListener listener) {
-		mListener = listener;
 	}
 
 	@Override
@@ -763,20 +654,98 @@ public class TitlePageIndicator extends View implements PageIndicator {
 		setMeasuredDimension(measuredWidth, measuredHeight);
 	}
 
-	@Override
-	public void onRestoreInstanceState(Parcelable state) {
-		SavedState savedState = (SavedState) state;
-		super.onRestoreInstanceState(savedState.getSuperState());
-		mCurrentPage = savedState.currentPage;
-		requestLayout();
+	/**
+	 * Calculate the bounds for a view's title
+	 * 
+	 * @param index
+	 * @param paint
+	 * @return
+	 */
+	private RectF calcBounds(int index, Paint paint) {
+		// Calculate the text bounds
+		RectF bounds = new RectF();
+		bounds.right = paint.measureText(mTitleProvider.getTitle(index));
+		bounds.bottom = paint.descent() - paint.ascent();
+		return bounds;
 	}
 
-	@Override
-	public Parcelable onSaveInstanceState() {
-		Parcelable superState = super.onSaveInstanceState();
-		SavedState savedState = new SavedState(superState);
-		savedState.currentPage = mCurrentPage;
-		return savedState;
+	/**
+	 * Calculate views bounds and scroll them according to the current index
+	 * 
+	 * @param paint
+	 * @param currentIndex
+	 * @return
+	 */
+	private ArrayList<RectF> calculateAllBounds(Paint paint) {
+		ArrayList<RectF> list = new ArrayList<RectF>();
+		// For each views (If no values then add a fake one)
+		final int count = mViewPager.getAdapter().getCount();
+		final int width = getWidth();
+		final int halfWidth = width / 2;
+		for (int i = 0; i < count; i++) {
+			RectF bounds = calcBounds(i, paint);
+			float w = bounds.right - bounds.left;
+			float h = bounds.bottom - bounds.top;
+			bounds.left = halfWidth - w / 2 - mCurrentOffset + (i - mCurrentPage) * width;
+			bounds.right = bounds.left + w;
+			bounds.top = 0;
+			bounds.bottom = h;
+			list.add(bounds);
+		}
+
+		return list;
+	}
+
+	/**
+	 * Set bounds for the left textView including clip padding.
+	 * 
+	 * @param curViewBound current bounds.
+	 * @param curViewWidth width of the view.
+	 */
+	private void clipViewOnTheLeft(RectF curViewBound, float curViewWidth, int left) {
+		curViewBound.left = left + mClipPadding;
+		curViewBound.right = mClipPadding + curViewWidth;
+	}
+
+	/**
+	 * Set bounds for the right textView including clip padding.
+	 * 
+	 * @param curViewBound current bounds.
+	 * @param curViewWidth width of the view.
+	 */
+	private void clipViewOnTheRight(RectF curViewBound, float curViewWidth, int right) {
+		curViewBound.right = right - mClipPadding;
+		curViewBound.left = curViewBound.right - curViewWidth;
+	}
+
+	public enum IndicatorStyle {
+		None(0), Triangle(1), Underline(2);
+
+		public final int value;
+
+		private IndicatorStyle(int value) {
+			this.value = value;
+		}
+
+		public static IndicatorStyle fromValue(int value) {
+			for (IndicatorStyle style : IndicatorStyle.values()) {
+				if (style.value == value) return style;
+			}
+			return null;
+		}
+	}
+
+	/**
+	 * Interface for a callback when the center item has been clicked.
+	 */
+	public static interface OnCenterItemClickListener {
+
+		/**
+		 * Callback when the center item has been clicked.
+		 * 
+		 * @param position Position of the current center item.
+		 */
+		public void onCenterItemClick(int position);
 	}
 
 	static class SavedState extends BaseSavedState {

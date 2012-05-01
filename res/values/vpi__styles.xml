@@ -22,8 +22,8 @@
 		<item name="vpiTitlePageIndicatorStyle">@style/Widget.TitlePageIndicator</item>
 		<item name="vpiTabPageIndicatorStyle">@style/Widget.TabPageIndicator</item>
 		<item name="vpiVerticalTabPageIndicatorStyle">@style/Widget.TabPageIndicator.Vertical</item>
-		<item name="vpiTabTextStyle">@style/Widget.TabPageIndicator.Text</item>
-		<item name="vpiVerticalTabTextStyle">@style/Widget.TabPageIndicator.Text</item>
+		<item name="vpiTabTextStyle">@style/Widget.TabPageIndicator.TextView</item>
+		<item name="vpiVerticalTabTextStyle">@style/Widget.TabPageIndicator.TextView</item>
 	</style>
 
 	<style name="Widget.CirclePageIndicator" parent="@android:style/Widget">
@@ -55,27 +55,51 @@
 	<style name="Widget.TabPageIndicator" parent="@android:style/Widget">
 		<item name="android:gravity">center_horizontal</item>
 		<item name="android:background">@drawable/vpi__tab_indicator</item>
-		<item name="android:paddingLeft">12dip</item>
-		<item name="android:paddingRight">12dip</item>
+		<item name="android:paddingLeft">8dip</item>
+		<item name="android:paddingRight">8dip</item>
 		<item name="android:paddingTop">6dp</item>
 		<item name="android:paddingBottom">6dp</item>
+		<item name="android:orientation">horizontal</item>
 	</style>
 
 	<style name="Widget.TabPageIndicator.Vertical">
 		<item name="android:gravity">center_vertical</item>
 		<item name="android:background">@drawable/vpi__tab_indicator_vertical</item>
-		<item name="android:paddingLeft">12dip</item>
-		<item name="android:paddingRight">12dip</item>
-		<item name="android:paddingTop">22dp</item>
-		<item name="android:paddingBottom">22dp</item>
+		<item name="android:paddingLeft">6dip</item>
+		<item name="android:paddingRight">6dip</item>
+		<item name="android:paddingTop">8dp</item>
+		<item name="android:paddingBottom">8dp</item>
+		<item name="android:orientation">vertical</item>
 	</style>
 
-	<style name="Widget.TabPageIndicator.Text" parent="@android:style/Widget">
+	<style name="Widget.TabPageIndicator.TextView" parent="@android:style/Widget">
 		<item name="android:textAppearance">@style/TextAppearance.TabPageIndicator</item>
 		<item name="android:textColor">@color/vpi__dark_theme</item>
 		<item name="android:textSize">12sp</item>
 		<item name="android:textStyle">bold</item>
+		<item name="android:paddingTop">12dp</item>
+		<item name="android:paddingBottom">12dp</item>
 		<item name="android:maxLines">1</item>
+	</style>
+
+	<style name="Widget.TabPageIndicator.TextView.Light">
+		<item name="android:textColor">@color/vpi__light_theme</item>
+	</style>
+
+	<style name="Widget.TabPageIndicator.TextView.Vertical">
+		<item name="android:textAppearance">@style/TextAppearance.TabPageIndicator</item>
+		<item name="android:textColor">@color/vpi__dark_theme</item>
+		<item name="android:textSize">12sp</item>
+		<item name="android:textStyle">bold</item>
+		<item name="android:paddingLeft">12dip</item>
+		<item name="android:paddingRight">12dip</item>
+		<item name="android:maxLines">1</item>
+		<item name="android:ellipsize">none</item>
+		<item name="android:gravity">bottom</item>
+	</style>
+
+	<style name="Widget.TabPageIndicator.TextView.Vertical.Light">
+		<item name="android:textColor">@color/vpi__light_theme</item>
 	</style>
 
 	<style name="TextAppearance.TabPageIndicator" parent="@android:style/Widget"></style>

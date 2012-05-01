@@ -3,12 +3,17 @@
 	style="?attr/vpiVerticalTabPageIndicatorStyle"
 	class="com.viewpagerindicator.VerticalTabPageIndicator$TabView">
 
-	<com.viewpagerindicator.VerticalTextView
+	<ImageView
+		android:id="@android:id/icon"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:scaleType="center"/>
+
+	<view
 		android:id="@android:id/text1"
 		style="?attr/vpiVerticalTabTextStyle"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:ellipsize="none"
-		android:gravity="bottom"/>
+		class="com.viewpagerindicator.VerticalTabPageIndicator$VerticalTextView"/>
 
 </view>

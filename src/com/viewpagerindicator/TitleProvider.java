@@ -21,20 +21,22 @@ package com.viewpagerindicator;
 public interface TitleProvider {
 
 	/**
-	 * Returns the title of the view at position
-	 * 
-	 * @param position
-	 * @return
-	 */
-	public String getTitle(int position);
-	
-	/**
 	 * Returns the icon of the view at position
 	 * 
 	 * @param position
 	 * @return
 	 */
 	public Integer getIcon(int position);
-	
+
+	/**
+	 * Returns the title of the view at position
+	 * 
+	 * @param position
+	 * @return
+	 */
+	public String getTitle(int position);
+
 	public void onPageReselected(int position);
+
+	public void onPageSelected(int position);
 }
