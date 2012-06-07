@@ -61,8 +61,6 @@ public class CirclePageIndicator extends View implements PageIndicator {
 	private int mActivePointerId = INVALID_POINTER;
 	private boolean mIsDragging;
 
-	private boolean mPagingEnabled = true;
-
 	public CirclePageIndicator(Context context) {
 		this(context, null);
 	}
@@ -312,7 +310,6 @@ public class CirclePageIndicator extends View implements PageIndicator {
 	@Override
 	public void setPagingEnabled(boolean enabled) {
 		mViewPager.setPagingEnabled(enabled);
-		mPagingEnabled = enabled;
 	}
 
 	public void setRadius(float radius) {

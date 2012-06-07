@@ -64,6 +64,7 @@ public class VerticalTabPageIndicator extends ScrollView implements PageIndicato
 		this(context, null);
 	}
 
+	@SuppressWarnings("deprecation")
 	public VerticalTabPageIndicator(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		setVerticalScrollBarEnabled(false);
@@ -77,7 +78,7 @@ public class VerticalTabPageIndicator extends ScrollView implements PageIndicato
 			}
 		};
 		addView(mTabLayout, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
-				ViewGroup.LayoutParams.MATCH_PARENT));
+				ViewGroup.LayoutParams.FILL_PARENT));
 	}
 
 	@Override
@@ -215,6 +216,7 @@ public class VerticalTabPageIndicator extends ScrollView implements PageIndicato
 		setCurrentItem(initialPosition);
 	}
 
+	@SuppressWarnings("deprecation")
 	private void addTab(int icon, int index) {
 		// Workaround for not being able to pass a defStyle on pre-3.0
 		final TabView tabView = (TabView) mInflater.inflate(R.layout.vpi__tab_vertical, null);
@@ -222,9 +224,10 @@ public class VerticalTabPageIndicator extends ScrollView implements PageIndicato
 		tabView.setFocusable(true);
 		tabView.setOnClickListener(mTabClickListener);
 
-		mTabLayout.addView(tabView, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, 0, 1));
+		mTabLayout.addView(tabView, new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT, 0, 1));
 	}
 
+	@SuppressWarnings("deprecation")
 	private void addTab(String text, int index) {
 		// Workaround for not being able to pass a defStyle on pre-3.0
 		final TabView tabView = (TabView) mInflater.inflate(R.layout.vpi__tab_vertical, null);
@@ -232,9 +235,10 @@ public class VerticalTabPageIndicator extends ScrollView implements PageIndicato
 		tabView.setFocusable(true);
 		tabView.setOnClickListener(mTabClickListener);
 
-		mTabLayout.addView(tabView, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, 0, 1));
+		mTabLayout.addView(tabView, new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT, 0, 1));
 	}
 
+	@SuppressWarnings("deprecation")
 	private void addTab(String text, int icon, int index) {
 		// Workaround for not being able to pass a defStyle on pre-3.0
 		final TabView tabView = (TabView) mInflater.inflate(R.layout.vpi__tab_vertical, null);
@@ -242,7 +246,7 @@ public class VerticalTabPageIndicator extends ScrollView implements PageIndicato
 		tabView.setFocusable(true);
 		tabView.setOnClickListener(mTabClickListener);
 
-		mTabLayout.addView(tabView, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, 0, 1));
+		mTabLayout.addView(tabView, new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT, 0, 1));
 	}
 
 	private void animateToTab(final int position) {
